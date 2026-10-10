@@ -1,4 +1,4 @@
-# opper-budget
+# opencode-opper-budget
 
 An [OpenCode](https://opencode.ai) plugin that shows your Opper spend in the
 terminal's status bar, so you always know how much budget is left while you
@@ -31,33 +31,17 @@ response is kept in memory. Uninstalling the plugin stops all requests.
 
 ## Install
 
-Install from npm and add the package to your OpenCode config:
+Install the plugin with the OpenCode CLI:
 
 ```sh
-npm install opencode-opper-budget
+opencode plugin add opencode-opper-budget
 ```
 
-```jsonc
-// opencode.jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugins": ["opencode-opper-budget"]
-}
-```
-
-Prefer not to use npm? Copy the two source files into your OpenCode plugin directory:
+Updates are handled the same way:
 
 ```sh
-mkdir -p ~/.config/opencode/plugins/opper-budget
-curl -o ~/.config/opencode/plugins/opper-budget/index.ts \
-  https://raw.githubusercontent.com/NitorCreations/opencode-opper-budget/main/index.ts
-curl -o ~/.config/opencode/plugins/opper-budget/tui.tsx \
-  https://raw.githubusercontent.com/NitorCreations/opencode-opper-budget/main/tui.tsx
+opencode plugin update opencode-opper-budget
 ```
-
-Alternatively, install the whole directory from this repo into any project's
-`.opencode/plugins/opper-budget/`. OpenCode loads plugins from
-`.opencode/plugins/` automatically; no config changes needed.
 
 You need an Opper account with an API key already saved by the Opper CLI:
 
