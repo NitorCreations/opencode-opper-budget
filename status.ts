@@ -64,16 +64,6 @@ export function spendPercent(
 }
 
 /**
- * Traffic light for non-blocked accounts: >=70 yellow (approaching or at the
- * limit), otherwise green; null means no marker. Red is reserved for blocked
- * accounts and is applied by buildLabel.
- */
-export function trafficLight(percent: number | null): string {
-  if (percent === null) return ""
-  return percent >= 70 ? "🟡" : "🟢"
-}
-
-/**
  * Picks the active Opper API key from a credential list response.
  * The client returns the array directly in some versions and
  * `{ data: [...] }` in others; accept both.
@@ -105,9 +95,6 @@ export function buildLabel(input: {
   const member = me.member_spend
 
   const percent = spendPercent(member?.spent_cents, member?.limit_cents)
-  // A blocked account is always red, regardless of the spent/limit ratio
-  // (the block may not be overage-related, or the limit may be unknown).
-  const marker = me.blocked ? "🔴" : trafficLight(percent)
 
   const parts: string[] = []
   if (me.blocked) {
@@ -122,6 +109,5 @@ export function buildLabel(input: {
     parts.push(`${money(member.remaining_cents, member.currency)} left`)
   if (now - s.fetchedAt > REFRESH_MS * 3) parts.push("stale")
 
-  const prefix = marker ? `opper ${marker}` : "opper"
-  return `${prefix} ${parts.join(" · ")}`
+  return `opper ${parts.join(" · ")}`
 }

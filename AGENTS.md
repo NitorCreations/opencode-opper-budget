@@ -39,9 +39,8 @@ good reason.
   the file with the React JSX runtime and plugin loading fails with
   `Cannot find package 'react'` for npm-installed copies.
 - **Money math**: cents are integers; `money()` is the only place that formats
-  currency. Percentages are capped at 999. Traffic light: red only for
-  blocked accounts; otherwise >=70 yellow, otherwise green; `null` percent
-  means no marker.
+  currency. Percentages are capped at 999. There is no traffic light or
+  status marker; the BLOCKED text and `stale` note carry the state.
 - **Failing silently-ish**: an error at setup, a missing key, or a failed
   fetch must not crash the TUI. Log or surface the failure in the status line,
   never throw from `render` or `label`.

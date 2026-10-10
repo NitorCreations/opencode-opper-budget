@@ -7,7 +7,6 @@ import {
   pickOpperKey,
   shouldFetch,
   spendPercent,
-  trafficLight,
 } from "../status"
 
 // ---------- money ----------
@@ -40,7 +39,7 @@ describe("money", () => {
   })
 })
 
-// ---------- spendPercent / trafficLight ----------
+// ---------- spendPercent ----------
 
 describe("spendPercent", () => {
   test("computes percentage of limit", () => {
@@ -63,24 +62,6 @@ describe("spendPercent", () => {
 
   test("rounds to nearest integer", () => {
     expect(spendPercent(125, 1000)).toBe(13)
-  })
-})
-
-describe("trafficLight", () => {
-  test("green under 70", () => {
-    expect(trafficLight(69)).toBe("🟢")
-    expect(trafficLight(0)).toBe("🟢")
-  })
-
-  test("yellow at 70 and up (never red for non-blocked)", () => {
-    expect(trafficLight(70)).toBe("🟡")
-    expect(trafficLight(89)).toBe("🟡")
-    expect(trafficLight(90)).toBe("🟡")
-    expect(trafficLight(999)).toBe("🟡")
-  })
-
-  test("null percent means no marker", () => {
-    expect(trafficLight(null)).toBe("")
   })
 })
 
@@ -205,7 +186,7 @@ describe("buildLabel", () => {
         providerID: "opper",
         snapshot: okSnapshot({ member_spend: spend() }),
       }),
-    ).toBe("opper 🟢 $1.24 / $10.00 (12%) · $8.76 left")
+    ).toBe("opper $1.24 / $10.00 (12%) · $8.76 left")
   })
 
   test("never renders a project spend segment", () => {
@@ -220,7 +201,7 @@ describe("buildLabel", () => {
           project_spend: spend({ spent_cents: 350 }),
         }),
       }),
-    ).toBe("opper 🟢 $1.24 / $10.00 (12%) · $8.76 left")
+    ).toBe("opper $1.24 / $10.00 (12%) · $8.76 left")
   })
 
   test("omits limit segment when limit is unset", () => {
@@ -232,17 +213,6 @@ describe("buildLabel", () => {
         }),
       }),
     ).toBe("opper $1.24")
-  })
-
-  test("no double space when no marker (unset limit)", () => {
-    expect(
-      buildLabel({
-        providerID: "opper",
-        snapshot: okSnapshot({
-          member_spend: spend({ limit_cents: null, remaining_cents: null }),
-        }),
-      }).startsWith("opper  "),
-    ).toBe(false)
   })
 
   test("shows BLOCKED with reason before amounts", () => {
@@ -258,57 +228,21 @@ describe("buildLabel", () => {
     expect(label).toContain("$1.24 / $10.00 (12%)")
   })
 
-  test("blocked account always shows red, even at low usage", () => {
-    // Block may be non-overage (payment failure, policy); red regardless.
-    const label = buildLabel({
-      providerID: "opper",
-      snapshot: okSnapshot({
-        blocked: true,
-        block_reason: "payment failed",
-        member_spend: spend({ spent_cents: 200, remaining_cents: 800 }), // 20%
-      }),
-    })
-    expect(label).toContain("🔴")
-    expect(label).not.toContain("🟢")
-  })
-
-  test("blocked account shows red even without a usable limit", () => {
-    const label = buildLabel({
-      providerID: "opper",
-      snapshot: okSnapshot({
-        blocked: true,
-        member_spend: spend({ limit_cents: null, remaining_cents: null }),
-      }),
-    })
-    expect(label).toContain("🔴")
-    expect(label).toContain("BLOCKED")
-  })
-
-  test("overage block (spent >= limit) renders red", () => {
-    const label = buildLabel({
-      providerID: "opper",
-      snapshot: okSnapshot({
-        blocked: true,
-        member_spend: spend({ spent_cents: 1000, remaining_cents: 0 }), // 100%
-      }),
-    })
-    expect(label).toContain("🔴")
-  })
-
-  test("overage without block flag renders yellow, not red", () => {
-    // The API may report >100% spend without setting blocked; red is
-    // reserved for the blocked flag only.
+  test("overage without block flag renders percent, no light", () => {
+    // The API may report >100% spend without setting blocked; the status
+    // line carries no traffic light at all.
     const label = buildLabel({
       providerID: "opper",
       snapshot: okSnapshot({
         member_spend: spend({ spent_cents: 1200, remaining_cents: 0 }),
       }),
     })
-    expect(label).toContain("🟡")
+    expect(label).toContain("(120%)")
+    expect(label).not.toContain("🟡")
     expect(label).not.toContain("🔴")
   })
 
-  test("traffic light thresholds in the rendered line", () => {
+  test("no traffic light at any usage level", () => {
     const mk = (spent: number) =>
       buildLabel({
         providerID: "opper",
@@ -316,12 +250,10 @@ describe("buildLabel", () => {
           member_spend: spend({ spent_cents: spent, remaining_cents: 1000 - spent }),
         }),
       })
-    expect(mk(100).includes("🟢")).toBe(true)
-    expect(mk(750).includes("🟡")).toBe(true)
-    // Red is reserved for blocked accounts.
+    expect(mk(100).includes("🟢")).toBe(false)
+    expect(mk(750).includes("🟡")).toBe(false)
     expect(mk(950).includes("🔴")).toBe(false)
-    expect(mk(950).includes("🟡")).toBe(true)
-    expect(mk(999999).includes("🟡")).toBe(true)
+    expect(mk(999999).includes("🔴")).toBe(false)
   })
 
   test("stale marker after three refresh cycles", () => {
