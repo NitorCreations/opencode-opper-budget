@@ -54,6 +54,35 @@ good reason.
   [plugin docs](https://opencode.ai/v2/docs/build/plugins) before changing
   them. SLOT names are commented in `tui.tsx` for the same reason.
 
+## Testing
+
+No automated test suite. Verify changes manually against a running OpenCode:
+
+- **Scratch project**: copy the plugin sources into a throwaway directory's
+  `.opencode/plugins/<name>/` (or test the npm flow with
+  `opencode plugin add <pkg>`). Never test in a project you care about.
+- **Headless load check**: `opencode debug agents` from the scratch
+  directory must exit 0. This exercises server-side loading only — the TUI
+  plugin's `setup` does not run headless.
+- **TUI load check**: the TUI does not start headless. Wrap a short run in a
+  pseudo-TTY instead, e.g. `timeout 30 script -q /dev/null opencode` from
+  the scratch directory. This exercises TSX transpiling, slot registration,
+  and TUI-only APIs such as `context.client.credential.list()`.
+- **Failure signals**: check `~/.local/share/opencode/log/opencode.log` for
+  `plugin operation failed` and `Cannot find package`. Beware: your own
+  grep/shell commands are logged too — filter for the real message lines
+  (`grep -v "spawning process"`), don't match on your command text.
+- **Probing plugin APIs**: to explore context APIs without exposing secrets,
+  use a temporary probe plugin that writes shapes only — strings as
+  `len:<n>`, key/token/secret fields masked — to a JSON file in `~/.cache/`,
+  then read it after a run. Delete the probe file afterwards. Never write
+  real key values to disk or logs.
+- **Packaging**: `npm pack --dry-run` must list exactly `index.ts`,
+  `tui.tsx`, `README.md`, and `package.json`.
+- **Test through the npm path, not only local copies**: some failure modes
+  only appear for npm-installed plugins (see the JSX pragma convention — the
+  same file loaded fine locally and failed from the npm cache).
+
 ## Committing
 
 - Commit small and frequently; messages are one line, imperative, no prefix
