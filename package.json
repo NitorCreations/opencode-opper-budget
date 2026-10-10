@@ -1,6 +1,6 @@
 {
   "name": "opencode-opper-budget",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "OpenCode CLI plugin that shows your Opper spend in the status bar",
   "type": "module",
   "license": "MIT",
