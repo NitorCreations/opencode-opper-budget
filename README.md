@@ -10,17 +10,15 @@ that polls Opper's usage API and renders a live status item in the prompt and
 home footers, for example:
 
 ```
-opper ● $1.24 / $10.00 (12%) · $8.76 left
+opper 🟢 $1.24 / $10.00 (12%) · $8.76 left
 ```
 
 The status item only renders when the current model's provider is `opper`.
-The status dot uses a small `●` glyph colored by the active theme's feedback
-colors (green/yellow/red) rather than large emoji circles. The semantic
-rule is unchanged: green under 70%, yellow at 70% or above (approaching or
-at the limit), and red only when the account is blocked — usage alone never
-turns the dot red. A `BLOCKED` warning accompanies the red dot, and a
-`stale` note appears when the last fetch is more than three refresh cycles
-old.
+Traffic light thresholds: 🟢 under 70%, 🟡 70% and above (approaching or at
+the limit), and 🔴 only when the account is blocked — usage alone never
+turns the light red. A `BLOCKED` warning accompanies the red marker, and a
+`stale` marker appears when
+the last fetch is more than three refresh cycles old.
 
 ## How it works
 

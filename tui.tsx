@@ -94,18 +94,7 @@ export default Plugin.define({
     // The renderer starts focused; begin polling.
     start()
 
-    const render = () => {
-      const l = label()
-      const color =
-        l.colorKey === null ? undefined : (context.theme.text.feedback as any)[l.colorKey]?.base
-      return (
-        <text>
-          <span fg={color}>{l.symbol}</span>
-          {l.symbol ? " " : ""}
-          {l.text}
-        </text>
-      )
-    }
+    const render = () => <text>{label()}</text>
 
     const label = () =>
       buildLabel({

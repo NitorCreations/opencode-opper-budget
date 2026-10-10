@@ -63,22 +63,14 @@ export function spendPercent(
     : null
 }
 
-/** Traffic light for non-blocked accounts: >=70 yellow, otherwise green; null
- * means no marker. Red is reserved for blocked accounts (applied by buildLabel). */
+/**
+ * Traffic light for non-blocked accounts: >=70 yellow (approaching or at the
+ * limit), otherwise green; null means no marker. Red is reserved for blocked
+ * accounts and is applied by buildLabel.
+ */
 export function trafficLight(percent: number | null): string {
   if (percent === null) return ""
   return percent >= 70 ? "🟡" : "🟢"
-}
-
-/** Semantic color key for the marker dot, for theme-based rendering.
- * Red is reserved for blocked accounts; null means no dot. */
-export function markerColor(
-  blocked: boolean,
-  percent: number | null,
-): "success" | "warning" | "error" | null {
-  if (blocked) return "error"
-  if (percent === null) return null
-  return percent >= 70 ? "warning" : "success"
 }
 
 /**
@@ -94,32 +86,29 @@ export function pickOpperKey(res: unknown): string | null {
   return match?.value?.key ?? null
 }
 
-/** Pure status-line renderer; tui.tsx only supplies live inputs.
- * `render` describes the structured output: `symbol` is the compact
- * status glyph ("●", warning triangle, etc.) whose color is chosen by
- * `colorKey` (a theme feedback kind), and `text` is the message body. */
+/** Pure status-line renderer; tui.tsx only supplies live inputs. */
 export function buildLabel(input: {
   providerID?: string
   snapshot: Snapshot | null
   now?: number
-}): { symbol: string; colorKey: "success" | "warning" | "error" | null; text: string } {
+}): string {
   const { providerID, snapshot } = input
   const now = input.now ?? Date.now()
-  if (!providerID || providerID !== "opper")
-    return { symbol: "", colorKey: null, text: "" }
+  if (!providerID || providerID !== "opper") return ""
 
   const s = snapshot
-  if (!s) return { symbol: "", colorKey: null, text: "" }
-  if (s.status === "no-key")
-    return { symbol: "⚠", colorKey: "warning", text: "opper no api key (connect opper in opencode)" }
-  if (s.status === "fetch-error")
-    return { symbol: "✗", colorKey: "error", text: `opper api error (${s.error ?? "unknown"})` }
+  if (!s) return ""
+  if (s.status === "no-key") return "opper ⚠ no api key (connect opper in opencode)"
+  if (s.status === "fetch-error") return `opper ✗ (${s.error ?? "api error"})`
 
   const me = s.data ?? {}
   const member = me.member_spend
 
   const percent = spendPercent(member?.spent_cents, member?.limit_cents)
-  const colorKey = markerColor(!!me.blocked, percent)
+  // A blocked account is always red, regardless of the spent/limit ratio
+  // (the block may not be overage-related, or the limit may be unknown).
+  const marker = me.blocked ? "🔴" : trafficLight(percent)
+
   const parts: string[] = []
   if (me.blocked) {
     parts.push(`BLOCKED${me.block_reason ? `: ${me.block_reason}` : ""}`)
@@ -133,9 +122,6 @@ export function buildLabel(input: {
     parts.push(`${money(member.remaining_cents, member.currency)} left`)
   if (now - s.fetchedAt > REFRESH_MS * 3) parts.push("stale")
 
-  return {
-    symbol: colorKey === null ? "" : "●",
-    colorKey,
-    text: `opper ${parts.join(" · ")}`,
-  }
+  const prefix = marker ? `opper ${marker}` : "opper"
+  return `${prefix} ${parts.join(" · ")}`
 }

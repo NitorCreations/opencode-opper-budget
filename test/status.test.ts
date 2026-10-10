@@ -3,7 +3,6 @@ import {
   MAX_CONSECUTIVE_FAILURES,
   REFRESH_MS,
   buildLabel,
-  markerColor,
   money,
   pickOpperKey,
   shouldFetch,
@@ -41,7 +40,7 @@ describe("money", () => {
   })
 })
 
-// ---------- spendPercent / trafficLight / markerColor ----------
+// ---------- spendPercent / trafficLight ----------
 
 describe("spendPercent", () => {
   test("computes percentage of limit", () => {
@@ -82,27 +81,6 @@ describe("trafficLight", () => {
 
   test("null percent means no marker", () => {
     expect(trafficLight(null)).toBe("")
-  })
-})
-
-describe("markerColor", () => {
-  test("error only for blocked", () => {
-    expect(markerColor(true, 5)).toBe("error")
-    expect(markerColor(true, null)).toBe("error")
-  })
-
-  test("warning at 70 and up, not blocked", () => {
-    expect(markerColor(false, 70)).toBe("warning")
-    expect(markerColor(false, 999)).toBe("warning")
-  })
-
-  test("success under 70", () => {
-    expect(markerColor(false, 69)).toBe("success")
-    expect(markerColor(false, 0)).toBe("success")
-  })
-
-  test("null when no usable limit", () => {
-    expect(markerColor(false, null)).toBeNull()
   })
 })
 
@@ -198,69 +176,77 @@ const spend = (over: Partial<any> = {}) => ({
 describe("buildLabel", () => {
   test("empty for non-opper provider or missing model", () => {
     const snap = okSnapshot({ member_spend: spend() })
-    expect(buildLabel({ providerID: "anthropic", snapshot: snap }).text).toBe("")
-    expect(buildLabel({ snapshot: snap }).text).toBe("")
+    expect(buildLabel({ providerID: "anthropic", snapshot: snap })).toBe("")
+    expect(buildLabel({ snapshot: snap })).toBe("")
   })
 
   test("empty before first snapshot", () => {
-    expect(buildLabel({ providerID: "opper", snapshot: null }).text).toBe("")
+    expect(buildLabel({ providerID: "opper", snapshot: null })).toBe("")
   })
 
-  test("no-key message with warning symbol", () => {
-    const l = buildLabel({ providerID: "opper", snapshot: { fetchedAt: now, status: "no-key", data: null } })
-    expect(l.symbol).toBe("⚠")
-    expect(l.colorKey).toBe("warning")
-    expect(l.text).toBe("opper no api key (connect opper in opencode)")
+  test("no-key message", () => {
+    expect(
+      buildLabel({ providerID: "opper", snapshot: { fetchedAt: now, status: "no-key", data: null } }),
+    ).toBe("opper ⚠ no api key (connect opper in opencode)")
   })
 
-  test("fetch-error message with error symbol", () => {
-    const l = buildLabel({
-      providerID: "opper",
-      snapshot: { fetchedAt: now, status: "fetch-error", error: "HTTP 500", data: null },
-    })
-    expect(l.symbol).toBe("✗")
-    expect(l.colorKey).toBe("error")
-    expect(l.text).toBe("opper api error (HTTP 500)")
+  test("fetch-error message includes error text", () => {
+    expect(
+      buildLabel({
+        providerID: "opper",
+        snapshot: { fetchedAt: now, status: "fetch-error", error: "HTTP 500", data: null },
+      }),
+    ).toBe("opper ✗ (HTTP 500)")
   })
 
   test("render full happy path", () => {
-    const l = buildLabel({
-      providerID: "opper",
-      snapshot: okSnapshot({ member_spend: spend() }),
-    })
-    expect(l.text).toBe("opper $1.24 / $10.00 (12%) · $8.76 left")
-    expect(l.symbol).toBe("●")
-    expect(l.colorKey).toBe("success")
+    expect(
+      buildLabel({
+        providerID: "opper",
+        snapshot: okSnapshot({ member_spend: spend() }),
+      }),
+    ).toBe("opper 🟢 $1.24 / $10.00 (12%) · $8.76 left")
   })
 
   test("never renders a project spend segment", () => {
     // The status line is personal-budget only, even if the API returns
     // project-level data.
-    const l = buildLabel({
-      providerID: "opper",
-      snapshot: okSnapshot({
-        member_spend: spend(),
-        // @ts-expect-error project_spend is intentionally not part of OpperMe
-        project_spend: spend({ spent_cents: 350 }),
+    expect(
+      buildLabel({
+        providerID: "opper",
+        snapshot: okSnapshot({
+          member_spend: spend(),
+          // @ts-expect-error project_spend is intentionally not part of OpperMe
+          project_spend: spend({ spent_cents: 350 }),
+        }),
       }),
-    })
-    expect(l.text).toBe("opper $1.24 / $10.00 (12%) · $8.76 left")
+    ).toBe("opper 🟢 $1.24 / $10.00 (12%) · $8.76 left")
   })
 
   test("omits limit segment when limit is unset", () => {
-    const l = buildLabel({
-      providerID: "opper",
-      snapshot: okSnapshot({
-        member_spend: spend({ limit_cents: null, remaining_cents: null }),
+    expect(
+      buildLabel({
+        providerID: "opper",
+        snapshot: okSnapshot({
+          member_spend: spend({ limit_cents: null, remaining_cents: null }),
+        }),
       }),
-    })
-    expect(l.text).toBe("opper $1.24")
-    expect(l.symbol).toBe("")
-    expect(l.colorKey).toBeNull()
+    ).toBe("opper $1.24")
+  })
+
+  test("no double space when no marker (unset limit)", () => {
+    expect(
+      buildLabel({
+        providerID: "opper",
+        snapshot: okSnapshot({
+          member_spend: spend({ limit_cents: null, remaining_cents: null }),
+        }),
+      }).startsWith("opper  "),
+    ).toBe(false)
   })
 
   test("shows BLOCKED with reason before amounts", () => {
-    const l = buildLabel({
+    const label = buildLabel({
       providerID: "opper",
       snapshot: okSnapshot({
         blocked: true,
@@ -268,13 +254,13 @@ describe("buildLabel", () => {
         member_spend: spend(),
       }),
     })
-    expect(l.text).toContain("BLOCKED: credit exhausted")
-    expect(l.text).toContain("$1.24 / $10.00 (12%)")
+    expect(label).toContain("BLOCKED: credit exhausted")
+    expect(label).toContain("$1.24 / $10.00 (12%)")
   })
 
-  test("blocked account always shows error dot, even at low usage", () => {
+  test("blocked account always shows red, even at low usage", () => {
     // Block may be non-overage (payment failure, policy); red regardless.
-    const l = buildLabel({
+    const label = buildLabel({
       providerID: "opper",
       snapshot: okSnapshot({
         blocked: true,
@@ -282,43 +268,44 @@ describe("buildLabel", () => {
         member_spend: spend({ spent_cents: 200, remaining_cents: 800 }), // 20%
       }),
     })
-    expect(l.colorKey).toBe("error")
-    expect(l.symbol).toBe("●")
+    expect(label).toContain("🔴")
+    expect(label).not.toContain("🟢")
   })
 
-  test("blocked account shows error dot even without a usable limit", () => {
-    const l = buildLabel({
+  test("blocked account shows red even without a usable limit", () => {
+    const label = buildLabel({
       providerID: "opper",
       snapshot: okSnapshot({
         blocked: true,
         member_spend: spend({ limit_cents: null, remaining_cents: null }),
       }),
     })
-    expect(l.colorKey).toBe("error")
-    expect(l.text).toContain("BLOCKED")
+    expect(label).toContain("🔴")
+    expect(label).toContain("BLOCKED")
   })
 
-  test("overage block (spent >= limit) renders error dot", () => {
-    const l = buildLabel({
+  test("overage block (spent >= limit) renders red", () => {
+    const label = buildLabel({
       providerID: "opper",
       snapshot: okSnapshot({
         blocked: true,
         member_spend: spend({ spent_cents: 1000, remaining_cents: 0 }), // 100%
       }),
     })
-    expect(l.colorKey).toBe("error")
+    expect(label).toContain("🔴")
   })
 
-  test("overage without block flag renders warning, not error", () => {
+  test("overage without block flag renders yellow, not red", () => {
     // The API may report >100% spend without setting blocked; red is
     // reserved for the blocked flag only.
-    const l = buildLabel({
+    const label = buildLabel({
       providerID: "opper",
       snapshot: okSnapshot({
         member_spend: spend({ spent_cents: 1200, remaining_cents: 0 }),
       }),
     })
-    expect(l.colorKey).toBe("warning")
+    expect(label).toContain("🟡")
+    expect(label).not.toContain("🔴")
   })
 
   test("traffic light thresholds in the rendered line", () => {
@@ -329,21 +316,22 @@ describe("buildLabel", () => {
           member_spend: spend({ spent_cents: spent, remaining_cents: 1000 - spent }),
         }),
       })
-    expect(mk(100).colorKey).toBe("success")
-    expect(mk(750).colorKey).toBe("warning")
-    // Error is reserved for blocked accounts.
-    expect(mk(950).colorKey).toBe("warning")
-    expect(mk(999999).colorKey).toBe("warning")
+    expect(mk(100).includes("🟢")).toBe(true)
+    expect(mk(750).includes("🟡")).toBe(true)
+    // Red is reserved for blocked accounts.
+    expect(mk(950).includes("🔴")).toBe(false)
+    expect(mk(950).includes("🟡")).toBe(true)
+    expect(mk(999999).includes("🟡")).toBe(true)
   })
 
   test("stale marker after three refresh cycles", () => {
     const data = { member_spend: spend() }
     // strict inequality: exactly 3 cycles is not yet stale
     expect(
-      buildLabel({ providerID: "opper", snapshot: okSnapshot(data), now: now + REFRESH_MS * 3 - 1 }).text.includes("stale"),
+      buildLabel({ providerID: "opper", snapshot: okSnapshot(data), now: now + REFRESH_MS * 3 - 1 }).includes("stale"),
     ).toBe(false)
     expect(
-      buildLabel({ providerID: "opper", snapshot: okSnapshot(data), now: now + REFRESH_MS * 3 + 1 }).text.includes("stale"),
+      buildLabel({ providerID: "opper", snapshot: okSnapshot(data), now: now + REFRESH_MS * 3 + 1 }).includes("stale"),
     ).toBe(true)
   })
 
@@ -353,23 +341,21 @@ describe("buildLabel", () => {
       buildLabel({
         providerID: "opper",
         snapshot: { fetchedAt: now, status: "fetch-error", error: "x", data: okSnapshot({ member_spend: spend() }).data },
-      }).text,
-    ).toBe("opper api error (x)")
+      }),
+    ).toBe("opper ✗ (x)")
   })
 
-  test("null member_spend renders em dash without marker", () => {
-    // No numeric spend -> no usable percent -> no dot.
-    const l = buildLabel({ providerID: "opper", snapshot: okSnapshot({ member_spend: null }) })
-    expect(l.text).toBe("opper —")
-    expect(l.symbol).toBe("")
-    expect(l.colorKey).toBeNull()
+  test("null member_spend renders em dash without limit/percent", () => {
+    expect(buildLabel({ providerID: "opper", snapshot: okSnapshot({ member_spend: null }) })).toBe(
+      "opper —",
+    )
   })
 
   test("percent capped at 999 in rendered output", () => {
-    const l = buildLabel({
+    const label = buildLabel({
       providerID: "opper",
       snapshot: okSnapshot({ member_spend: spend({ spent_cents: 999999, remaining_cents: 0 }) }),
     })
-    expect(l.text).toContain("(999%)")
+    expect(label).toContain("(999%)")
   })
 })
