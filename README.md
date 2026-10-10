@@ -31,14 +31,28 @@ response is kept in memory. Uninstalling the plugin stops all requests.
 
 ## Install
 
-Copy the two source files into your OpenCode plugin directory:
+Install from npm and add the package to your OpenCode config:
+
+```sh
+npm install opencode-opper-budget
+```
+
+```jsonc
+// opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["opencode-opper-budget"]
+}
+```
+
+Prefer not to use npm? Copy the two source files into your OpenCode plugin directory:
 
 ```sh
 mkdir -p ~/.config/opencode/plugins/opper-budget
 curl -o ~/.config/opencode/plugins/opper-budget/index.ts \
-  https://raw.githubusercontent.com/nitor/opper-budget/main/index.ts
+  https://raw.githubusercontent.com/NitorCreations/opencode-opper-budget/main/index.ts
 curl -o ~/.config/opencode/plugins/opper-budget/tui.tsx \
-  https://raw.githubusercontent.com/nitor/opper-budget/main/tui.tsx
+  https://raw.githubusercontent.com/NitorCreations/opencode-opper-budget/main/tui.tsx
 ```
 
 Alternatively, install the whole directory from this repo into any project's

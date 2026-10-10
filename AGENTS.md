@@ -18,8 +18,8 @@ good reason.
   and renders a footer status slot with spend, percentage, and traffic-light
   marker.
 - `package.json` — declares the plugin's id/name, entrypoints (`.` and
-  `./tui`), and its `@opencode/plugin` dependency. Not published to npm;
-  installed by copying files.
+  `./tui`), and its `@opencode/plugin` dependency. Published to npm as
+  `opencode-opper-budget`; install with `npm install opencode-opper-budget`.
 
 ## Conventions
 

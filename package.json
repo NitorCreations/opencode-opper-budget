@@ -1,8 +1,27 @@
 {
-  "name": "opper-budget",
+  "name": "opencode-opper-budget",
   "version": "0.1.0",
   "description": "OpenCode CLI plugin that shows your Opper spend in the status bar",
   "type": "module",
+  "license": "MIT",
+  "author": "Mika Majakorpi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NitorCreations/opencode-opper-budget.git"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "opper",
+    "status-bar",
+    "budget",
+    "cli"
+  ],
+  "files": [
+    "index.ts",
+    "tui.tsx",
+    "README.md"
+  ],
   "exports": {
     ".": "./index.ts",
     "./tui": "./tui.tsx"
