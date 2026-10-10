@@ -14,12 +14,13 @@ good reason.
   with the `opper.budget` id. It exists so the plugin package has a main
   entrypoint (required for auto-loading; the TUI part is exported separately).
 - `tui.tsx` — the CLI plugin that does all the work: reads the Opper API key
-  from `~/.opper/config.json`, polls `https://api.opper.ai/v3/me` every 60 s,
-  and renders a footer status slot with spend, percentage, and traffic-light
-  marker.
+  from OpenCode's credential store, polls `https://api.opper.ai/v3/me`
+  every 60 s, and renders a footer status slot with spend, percentage, and
+  traffic-light marker.
 - `package.json` — declares the plugin's id/name, entrypoints (`.` and
   `./tui`), and its `@opencode/plugin` dependency. Published to npm as
-  `opencode-opper-budget`; install with `npm install opencode-opper-budget`.
+  `opencode-opper-budget`; install with `opencode plugin add
+  opencode-opper-budget`.
 
 ## Conventions
 
@@ -37,16 +38,16 @@ good reason.
 - **Failing silently-ish**: an error at setup, a missing key, or a failed
   fetch must not crash the TUI. Log or surface the failure in the status line,
   never throw from `render` or `label`.
-- **Key source order**: prefer OpenCode's credential store
-  (`context.client.credential.list()`, `integrationID === "opper"`, key
-  type, active) before falling back to `~/.opper/config.json`. Keep both
-  paths failure-tolerant; never log or render the key.
+- **Key source**: the Opper key comes exclusively from OpenCode's credential
+  store (`context.client.credential.list()`, filter `integrationID ===
+  "opper"`, key type, active). Do not read other tools' config files. The
+  key is never logged or rendered.
 - **One fetch loop**: a single `setInterval` started in `setup`, cleared by
   the returned cleanup function. Do not add more timers or fetches without
   removing one.
-- **Secrets**: never commit real API keys. The key comes from
-  `~/.opper/config.json` at runtime; do not add a config option that would
-  inline a key into the repo.
+- **Secrets**: never commit real API keys. The key comes from OpenCode's
+  credential store at runtime; do not add a config option that would inline
+  a key into the repo.
 - **OpenCode APIs**: changes to `Plugin.define`, `context.ui.slot`, slot names
   like `prompt.footer.status`/`home.footer.status`, or the `/v3/me` response
   shape are the likely breakage sources. Verify against the current
@@ -58,5 +59,4 @@ good reason.
 - Commit small and frequently; messages are one line, imperative, no prefix
   conventions to follow.
 - Before committing, double-check `git status` and `git diff --staged` for
-  credentials or secrets (including the `~/.opper/config.json` path with a
-  real key inside).
+  credentials or secrets (including anything referencing a real key value).

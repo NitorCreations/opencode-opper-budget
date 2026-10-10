@@ -22,8 +22,7 @@ the last fetch is more than three refresh cycles old.
 
 The plugin reads the Opper API key from OpenCode's own credential store
 (the credential for the `opper` integration, which OpenCode uses for model
-calls). If OpenCode has no Opper credential, it falls back to the Opper CLI
-state file `~/.opper/config.json` (`keys.default.apiKey`). It then calls
+calls) and calls
 `GET https://api.opper.ai/v3/me` every 60 seconds. The response contains
 `member_spend` and `project_spend` objects with `spent_cents`, `limit_cents`,
 `remaining_cents`, and `currency` fields.
@@ -45,16 +44,12 @@ Updates are handled the same way:
 opencode plugin update opencode-opper-budget
 ```
 
-You need an Opper account with an API key already saved by the Opper CLI:
-
-```sh
-opper login
-```
+You need an Opper account whose API key is configured as a provider
+credential in OpenCode (this is what OpenCode uses for model calls, so if
+you are already using Opper models, you are set).
 
 ## Limitations
 
-- Opper CLI state file: the fallback path parses a private, undocumented
-  file. An Opper CLI update could change its shape and break that fallback.
 - The endpoint returns organization-wide spend, not per-session cost. It is
   the authoritative number to show, but it includes all Opper usage from all
   tools, not only OpenCode sessions.

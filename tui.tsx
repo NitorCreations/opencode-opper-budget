@@ -29,19 +29,6 @@ type Snapshot = {
   data: OpperMe | null
 }
 
-async function readApiKeyFromFile(): Promise<string | null> {
-  try {
-    const { readFile } = await import("node:fs/promises")
-    const { homedir } = await import("node:os")
-    const { join } = await import("node:path")
-    const raw = await readFile(join(homedir(), ".opper", "config.json"), "utf8")
-    const parsed = JSON.parse(raw) as { keys?: { default?: { apiKey?: string } } }
-    return parsed?.keys?.default?.apiKey ?? null
-  } catch {
-    return null
-  }
-}
-
 function money(cents: number | null | undefined, currency?: string) {
   if (typeof cents !== "number") return "—"
   const symbol = currency === "usd" ? "$" : currency === "eur" ? "€" : currency === "gbp" ? "£" : `${currency ?? ""} `
@@ -52,7 +39,7 @@ export default Plugin.define({
   id: "opper.budget",
   async setup(context) {
     const [snap, setSnap] = createSignal<Snapshot | null>(null)
-    const readApiKeyFromOpenCode = async (): Promise<string | null> => {
+    const readApiKey = async (): Promise<string | null> => {
       try {
         const credentials = await (context.client as any).credential.list()
         const data = credentials?.data ?? []
@@ -64,8 +51,6 @@ export default Plugin.define({
         return null
       }
     }
-    const readApiKey = async (): Promise<string | null> =>
-      (await readApiKeyFromOpenCode()) ?? (await readApiKeyFromFile())
 
     async function fetchSpend() {
       const apiKey = await readApiKey()
@@ -98,7 +83,7 @@ export default Plugin.define({
 
       const s = snap()
       if (!s) return ""
-      if (s.status === "no-key") return "opper ⚠ no api key (connect opper in opencode or run `opper login`)"
+      if (s.status === "no-key") return "opper ⚠ no api key (connect opper in opencode)"
       if (s.status === "fetch-error") return `opper ✗ (${s.error ?? "api error"})`
 
       const me = s.data ?? {}
