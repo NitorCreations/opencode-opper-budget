@@ -37,6 +37,10 @@ good reason.
 - **Failing silently-ish**: an error at setup, a missing key, or a failed
   fetch must not crash the TUI. Log or surface the failure in the status line,
   never throw from `render` or `label`.
+- **Key source order**: prefer OpenCode's credential store
+  (`context.client.credential.list()`, `integrationID === "opper"`, key
+  type, active) before falling back to `~/.opper/config.json`. Keep both
+  paths failure-tolerant; never log or render the key.
 - **One fetch loop**: a single `setInterval` started in `setup`, cleared by
   the returned cleanup function. Do not add more timers or fetches without
   removing one.
