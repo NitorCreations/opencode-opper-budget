@@ -27,6 +27,10 @@ good reason.
   `@opencode/plugin` and the Solid `createSignal` already used.
 - **Solid reactivity**: snapshot state lives in a `createSignal` inside
   `setup`; `label()` reads it reactively so slot renders stay current.
+- **JSX pragma**: `tui.tsx` must begin with
+  `/** @jsxImportSource @opentui/solid */`. Without it, OpenCode transpiles
+  the file with the React JSX runtime and plugin loading fails with
+  `Cannot find package 'react'` for npm-installed copies.
 - **Money math**: cents are integers; `money()` is the only place that formats
   currency. Percentages are capped at 999. Traffic light: >=90 red, >=70
   yellow, otherwise green; `null` percent means no limit is set.
