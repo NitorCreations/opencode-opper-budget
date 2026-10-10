@@ -17,6 +17,12 @@ good reason.
   from OpenCode's credential store, polls `https://api.opper.ai/v3/me`
   every 60 s, and renders a footer status slot with spend, percentage, and
   traffic-light marker.
+- `status.ts` — dependency-free pure logic shared with the tests: money
+  formatting, percent/marker calculation, credential picking, and the
+  status-line renderer (`buildLabel`). Keep this file framework-free so
+  `bun test` can import it.
+- `test/status.test.ts` — Bun test suite for `status.ts` (33 tests). Run
+  with `bun test`.
 - `package.json` — declares the plugin's id/name, entrypoints (`.` and
   `./tui`), and its `@opencode/plugin` dependency. Published to npm as
   `opencode-opper-budget`; install with `opencode plugin add
@@ -57,7 +63,14 @@ good reason.
 
 ## Testing
 
-No automated test suite. Verify changes manually against a running OpenCode:
+Automated: `bun test` (uses the Bun test runner, no extra deps). Tests cover
+the pure logic in `status.ts` only — money formatting, percent/marker
+thresholds, credential-list shape handling (`pickOpperKey`), and the full
+status-line renderer. When changing rendering or key-picking behavior,
+update `status.ts` and its tests together; `tui.tsx` must stay a thin
+adapter over it. Run `bun test` before every commit.
+
+Manual (against a running OpenCode):
 
 - **Scratch project**: copy the plugin sources into a throwaway directory's
   `.opencode/plugins/<name>/` (or test the npm flow with

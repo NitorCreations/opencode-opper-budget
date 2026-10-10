@@ -20,6 +20,7 @@
   "files": [
     "index.ts",
     "tui.tsx",
+    "status.ts",
     "README.md"
   ],
   "exports": {
