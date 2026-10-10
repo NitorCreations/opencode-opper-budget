@@ -40,8 +40,9 @@ good reason.
   never throw from `render` or `label`.
 - **Key source**: the Opper key comes exclusively from OpenCode's credential
   store (`context.client.credential.list()`, filter `integrationID ===
-  "opper"`, key type, active). Do not read other tools' config files. The
-  key is never logged or rendered.
+  "opper"`, key type, active). The call's return shape varies by OpenCode
+  version (array directly vs. `{ data: [...] }`) — accept both. Do not read
+  other tools' config files. The key is never logged or rendered.
 - **One fetch loop**: a single `setInterval` started in `setup`, cleared by
   the returned cleanup function. Do not add more timers or fetches without
   removing one.
