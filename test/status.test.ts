@@ -72,14 +72,11 @@ describe("trafficLight", () => {
     expect(trafficLight(0)).toBe("🟢")
   })
 
-  test("yellow at 70 and up to 89", () => {
+  test("yellow at 70 and up (never red for non-blocked)", () => {
     expect(trafficLight(70)).toBe("🟡")
     expect(trafficLight(89)).toBe("🟡")
-  })
-
-  test("red at and above 90", () => {
-    expect(trafficLight(90)).toBe("🔴")
-    expect(trafficLight(999)).toBe("🔴")
+    expect(trafficLight(90)).toBe("🟡")
+    expect(trafficLight(999)).toBe("🟡")
   })
 
   test("null percent means no marker", () => {
@@ -298,6 +295,19 @@ describe("buildLabel", () => {
     expect(label).toContain("🔴")
   })
 
+  test("overage without block flag renders yellow, not red", () => {
+    // The API may report >100% spend without setting blocked; red is
+    // reserved for the blocked flag only.
+    const label = buildLabel({
+      providerID: "opper",
+      snapshot: okSnapshot({
+        member_spend: spend({ spent_cents: 1200, remaining_cents: 0 }),
+      }),
+    })
+    expect(label).toContain("🟡")
+    expect(label).not.toContain("🔴")
+  })
+
   test("traffic light thresholds in the rendered line", () => {
     const mk = (spent: number) =>
       buildLabel({
@@ -308,7 +318,10 @@ describe("buildLabel", () => {
       })
     expect(mk(100).includes("🟢")).toBe(true)
     expect(mk(750).includes("🟡")).toBe(true)
-    expect(mk(950).includes("🔴")).toBe(true)
+    // Red is reserved for blocked accounts.
+    expect(mk(950).includes("🔴")).toBe(false)
+    expect(mk(950).includes("🟡")).toBe(true)
+    expect(mk(999999).includes("🟡")).toBe(true)
   })
 
   test("stale marker after three refresh cycles", () => {

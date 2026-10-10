@@ -63,10 +63,14 @@ export function spendPercent(
     : null
 }
 
-/** Traffic light: >=90 red, >=70 yellow, otherwise green; null means no marker. */
+/**
+ * Traffic light for non-blocked accounts: >=70 yellow (approaching or at the
+ * limit), otherwise green; null means no marker. Red is reserved for blocked
+ * accounts and is applied by buildLabel.
+ */
 export function trafficLight(percent: number | null): string {
   if (percent === null) return ""
-  return percent >= 90 ? "🔴" : percent >= 70 ? "🟡" : "🟢"
+  return percent >= 70 ? "🟡" : "🟢"
 }
 
 /**

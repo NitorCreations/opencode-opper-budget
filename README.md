@@ -14,8 +14,10 @@ opper 🟢 $1.24 / $10.00 (12%) · $8.76 left
 ```
 
 The status item only renders when the current model's provider is `opper`.
-Traffic light thresholds: 🟢 under 70%, 🟡 70–90%, 🔴 over 90% of the budget,
-plus a `BLOCKED` warning when the account is blocked and a `stale` marker when
+Traffic light thresholds: 🟢 under 70%, 🟡 70% and above (approaching or at
+the limit), and 🔴 only when the account is blocked — usage alone never
+turns the light red. A `BLOCKED` warning accompanies the red marker, and a
+`stale` marker appears when
 the last fetch is more than three refresh cycles old.
 
 ## How it works
