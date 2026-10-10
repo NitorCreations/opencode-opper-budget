@@ -206,9 +206,24 @@ describe("buildLabel", () => {
     expect(
       buildLabel({
         providerID: "opper",
-        snapshot: okSnapshot({ member_spend: spend(), project_spend: spend({ spent_cents: 350 }) }),
+        snapshot: okSnapshot({ member_spend: spend() }),
       }),
-    ).toBe("opper 🟢 $1.24 / $10.00 (12%) · $8.76 left · project $3.50")
+    ).toBe("opper 🟢 $1.24 / $10.00 (12%) · $8.76 left")
+  })
+
+  test("never renders a project spend segment", () => {
+    // The status line is personal-budget only, even if the API returns
+    // project-level data.
+    expect(
+      buildLabel({
+        providerID: "opper",
+        snapshot: okSnapshot({
+          member_spend: spend(),
+          // @ts-expect-error project_spend is intentionally not part of OpperMe
+          project_spend: spend({ spent_cents: 350 }),
+        }),
+      }),
+    ).toBe("opper 🟢 $1.24 / $10.00 (12%) · $8.76 left")
   })
 
   test("omits limit segment when limit is unset", () => {

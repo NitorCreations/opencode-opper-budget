@@ -36,7 +36,6 @@ export type OpperMe = {
   blocked?: boolean
   block_reason?: string | null
   member_spend?: Spend | null
-  project_spend?: Spend | null
   visibility?: { organization_finance?: boolean }
 }
 
@@ -100,7 +99,6 @@ export function buildLabel(input: {
 
   const me = s.data ?? {}
   const member = me.member_spend
-  const project = me.project_spend
 
   const percent = spendPercent(member?.spent_cents, member?.limit_cents)
   const marker = trafficLight(percent)
@@ -116,9 +114,6 @@ export function buildLabel(input: {
   )
   if (typeof member?.remaining_cents === "number")
     parts.push(`${money(member.remaining_cents, member.currency)} left`)
-  if (project && typeof project.spent_cents === "number") {
-    parts.push(`project ${money(project.spent_cents, project.currency)}`)
-  }
   if (now - s.fetchedAt > REFRESH_MS * 3) parts.push("stale")
 
   const prefix = marker ? `opper ${marker}` : "opper"

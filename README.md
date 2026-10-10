@@ -10,7 +10,7 @@ that polls Opper's usage API and renders a live status item in the prompt and
 home footers, for example:
 
 ```
-opper 🟢 $1.24 / $10.00 (12%) · $8.76 left · project $3.50
+opper 🟢 $1.24 / $10.00 (12%) · $8.76 left
 ```
 
 The status item only renders when the current model's provider is `opper`.
@@ -29,8 +29,9 @@ terminal lacks focus, or the active model is not an Opper model, no requests
 are made; a refocus triggers an immediate refresh. After three consecutive
 failed requests, polling pauses until the terminal is refocused. The
 response contains
-`member_spend` and `project_spend` objects with `spent_cents`, `limit_cents`,
-`remaining_cents`, and `currency` fields.
+`member_spend` object with `spent_cents`, `limit_cents`,
+`remaining_cents`, and `currency` fields. Only the personal budget
+(`member_spend`) is displayed; project-level spend is ignored.
 
 Nothing is stored anywhere: the key is only used to call Opper, and the
 response is kept in memory. Uninstalling the plugin stops all requests.
@@ -55,9 +56,9 @@ you are already using Opper models, you are set).
 
 ## Limitations
 
-- The endpoint returns organization-wide spend, not per-session cost. It is
-  the authoritative number to show, but it includes all Opper usage from all
-  tools, not only OpenCode sessions.
+- The endpoint returns organization-wide member spend, not per-session cost.
+  It is the authoritative personal budget number to show, but it includes
+  all Opper usage from all tools, not only OpenCode sessions.
 
 ## License
 
