@@ -101,7 +101,9 @@ export function buildLabel(input: {
   const member = me.member_spend
 
   const percent = spendPercent(member?.spent_cents, member?.limit_cents)
-  const marker = trafficLight(percent)
+  // A blocked account is always red, regardless of the spent/limit ratio
+  // (the block may not be overage-related, or the limit may be unknown).
+  const marker = me.blocked ? "🔴" : trafficLight(percent)
 
   const parts: string[] = []
   if (me.blocked) {

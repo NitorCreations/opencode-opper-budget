@@ -261,6 +261,43 @@ describe("buildLabel", () => {
     expect(label).toContain("$1.24 / $10.00 (12%)")
   })
 
+  test("blocked account always shows red, even at low usage", () => {
+    // Block may be non-overage (payment failure, policy); red regardless.
+    const label = buildLabel({
+      providerID: "opper",
+      snapshot: okSnapshot({
+        blocked: true,
+        block_reason: "payment failed",
+        member_spend: spend({ spent_cents: 200, remaining_cents: 800 }), // 20%
+      }),
+    })
+    expect(label).toContain("🔴")
+    expect(label).not.toContain("🟢")
+  })
+
+  test("blocked account shows red even without a usable limit", () => {
+    const label = buildLabel({
+      providerID: "opper",
+      snapshot: okSnapshot({
+        blocked: true,
+        member_spend: spend({ limit_cents: null, remaining_cents: null }),
+      }),
+    })
+    expect(label).toContain("🔴")
+    expect(label).toContain("BLOCKED")
+  })
+
+  test("overage block (spent >= limit) renders red", () => {
+    const label = buildLabel({
+      providerID: "opper",
+      snapshot: okSnapshot({
+        blocked: true,
+        member_spend: spend({ spent_cents: 1000, remaining_cents: 0 }), // 100%
+      }),
+    })
+    expect(label).toContain("🔴")
+  })
+
   test("traffic light thresholds in the rendered line", () => {
     const mk = (spent: number) =>
       buildLabel({
