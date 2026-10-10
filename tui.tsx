@@ -41,8 +41,10 @@ export default Plugin.define({
     const [snap, setSnap] = createSignal<Snapshot | null>(null)
     const readApiKey = async (): Promise<string | null> => {
       try {
-        const credentials = await (context.client as any).credential.list()
-        const data = credentials?.data ?? []
+        const res = await (context.client as any).credential.list()
+        // The client returns the array directly in some versions and
+        // { data: [...] } in others; accept both.
+        const data = Array.isArray(res) ? res : (res?.data ?? [])
         const match = data.find(
           (c: any) => c?.integrationID === "opper" && c?.active && c?.value?.type === "key",
         )
