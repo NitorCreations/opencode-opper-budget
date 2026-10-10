@@ -23,7 +23,12 @@ the last fetch is more than three refresh cycles old.
 The plugin reads the Opper API key from OpenCode's own credential store
 (the credential for the `opper` integration, which OpenCode uses for model
 calls) and calls
-`GET https://api.opper.ai/v3/me` every 60 seconds. The response contains
+`GET https://api.opper.ai/v3/me` every 60 seconds while the terminal is
+focused and an Opper model is selected. When the terminal is blurred, the
+terminal lacks focus, or the active model is not an Opper model, no requests
+are made; a refocus triggers an immediate refresh. After three consecutive
+failed requests, polling pauses until the terminal is refocused. The
+response contains
 `member_spend` and `project_spend` objects with `spent_cents`, `limit_cents`,
 `remaining_cents`, and `currency` fields.
 

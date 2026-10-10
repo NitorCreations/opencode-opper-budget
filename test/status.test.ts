@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import {
+  MAX_CONSECUTIVE_FAILURES,
   REFRESH_MS,
   buildLabel,
   money,
   pickOpperKey,
+  shouldFetch,
   spendPercent,
   trafficLight,
 } from "../status"
@@ -123,6 +125,36 @@ describe("pickOpperKey", () => {
     expect(pickOpperKey({})).toBeNull()
     expect(pickOpperKey("nonsense")).toBeNull()
     expect(pickOpperKey(42)).toBeNull()
+  })
+})
+
+// ---------- shouldFetch ----------
+
+describe("shouldFetch", () => {
+  const base = { focused: true, providerID: "opper" as const, consecutiveFailures: 0 }
+
+  test("fetches when focused, opper, and healthy", () => {
+    expect(shouldFetch(base)).toBe(true)
+  })
+
+  test("never fetches when blurred (polling paused)", () => {
+    expect(shouldFetch({ ...base, focused: false })).toBe(false)
+  })
+
+  test("never fetches for non-opper providers", () => {
+    expect(shouldFetch({ ...base, providerID: "anthropic" })).toBe(false)
+    expect(shouldFetch({ ...base, providerID: undefined })).toBe(false)
+  })
+
+  test("stops after MAX_CONSECUTIVE_FAILURES failures", () => {
+    expect(shouldFetch({ ...base, consecutiveFailures: MAX_CONSECUTIVE_FAILURES - 1 })).toBe(true)
+    expect(shouldFetch({ ...base, consecutiveFailures: MAX_CONSECUTIVE_FAILURES })).toBe(false)
+    expect(shouldFetch({ ...base, consecutiveFailures: MAX_CONSECUTIVE_FAILURES + 5 })).toBe(false)
+  })
+
+  test("failure stop applies regardless of focus or provider", () => {
+    expect(shouldFetch({ ...base, focused: false, consecutiveFailures: 99 })).toBe(false)
+    expect(shouldFetch({ ...base, providerID: "anthropic", consecutiveFailures: 99 })).toBe(false)
   })
 })
 

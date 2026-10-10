@@ -49,9 +49,15 @@ good reason.
   "opper"`, key type, active). The call's return shape varies by OpenCode
   version (array directly vs. `{ data: [...] }`) — accept both. Do not read
   other tools' config files. The key is never logged or rendered.
-- **One fetch loop**: a single `setInterval` started in `setup`, cleared by
-  the returned cleanup function. Do not add more timers or fetches without
-  removing one.
+- **One fetch loop, focus-aware**: a single `setInterval` started in
+  `setup`, cleared by the returned cleanup function. `start`/`stop` are the
+  only places the timer is created or cleared: `blur` stops the loop,
+  `focus` restarts it with an immediate fetch. Never run more than one
+  timer or add untracked fetches.
+- **Poll policy** (`shouldFetch` in `status.ts`, unit-tested): no fetch when
+  blurred, no fetch for non-opper models, and polling stops after
+  `MAX_CONSECUTIVE_FAILURES` consecutive failures until a refocus resets
+  the counter.
 - **Secrets**: never commit real API keys. The key comes from OpenCode's
   credential store at runtime; do not add a config option that would inline
   a key into the repo.

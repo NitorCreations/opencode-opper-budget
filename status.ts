@@ -1,4 +1,27 @@
 export const REFRESH_MS = 60_000
+/** Stop polling after this many consecutive failures (until refocus or success). */
+export const MAX_CONSECUTIVE_FAILURES = 3
+
+/**
+ * Decides whether a poll tick should perform a fetch.
+ * Pure so it can be unit-tested.
+ *
+ * Policy:
+ * - Blurred terminals never fetch; the label already shows "stale" and a
+ *   fresh fetch runs on refocus.
+ * - Non-opper models never fetch (the label renders empty for them anyway).
+ * - After MAX_CONSECUTIVE_FAILURES failures, stop polling until a fetch is
+ *   triggered again (focus event or success reset).
+ */
+export function shouldFetch(input: {
+  focused: boolean
+  providerID: string | undefined
+  consecutiveFailures: number
+}): boolean {
+  if (!input.focused) return false
+  if (input.providerID !== "opper") return false
+  return input.consecutiveFailures < MAX_CONSECUTIVE_FAILURES
+}
 
 export type Spend = {
   currency: string
